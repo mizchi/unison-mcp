@@ -1,0 +1,199 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.38.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           unison-mcp
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/mizchi/unison-mcp#readme>
+homepage:       https://github.com/mizchi/unison-mcp#readme
+bug-reports:    https://github.com/mizchi/unison-mcp/issues
+author:         mizchi
+maintainer:     example@example.com
+copyright:      2024 mizchi
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/mizchi/unison-mcp
+
+library
+  exposed-modules:
+      Unison.MCP.Protocol
+      Unison.MCP.Server
+      Unison.MCP.Tools
+      Unison.MCP.UCM
+  other-modules:
+      Paths_unison_mcp
+  hs-source-dirs:
+      src
+  default-extensions:
+      OverloadedStrings
+      DeriveGeneric
+      DeriveAnyClass
+      DerivingStrategies
+      LambdaCase
+      RecordWildCards
+      NamedFieldPuns
+      TupleSections
+      TypeApplications
+      ScopedTypeVariables
+      FlexibleContexts
+      FlexibleInstances
+      MultiParamTypeClasses
+      GeneralizedNewtypeDeriving
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      aeson
+    , async
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , mtl
+    , network
+    , process
+    , stm
+    , text
+    , transformers
+    , wai
+    , warp
+    , websockets
+  default-language: Haskell2010
+
+executable test-client
+  main-is: Main.hs
+  other-modules:
+      Paths_unison_mcp
+  hs-source-dirs:
+      test-client
+  default-extensions:
+      OverloadedStrings
+      DeriveGeneric
+      DeriveAnyClass
+      DerivingStrategies
+      LambdaCase
+      RecordWildCards
+      NamedFieldPuns
+      TupleSections
+      TypeApplications
+      ScopedTypeVariables
+      FlexibleContexts
+      FlexibleInstances
+      MultiParamTypeClasses
+      GeneralizedNewtypeDeriving
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , async
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , mtl
+    , network
+    , process
+    , stm
+    , text
+    , transformers
+    , unison-mcp
+    , wai
+    , warp
+    , websockets
+  default-language: Haskell2010
+
+executable unison-mcp
+  main-is: Main.hs
+  other-modules:
+      Paths_unison_mcp
+  hs-source-dirs:
+      app
+  default-extensions:
+      OverloadedStrings
+      DeriveGeneric
+      DeriveAnyClass
+      DerivingStrategies
+      LambdaCase
+      RecordWildCards
+      NamedFieldPuns
+      TupleSections
+      TypeApplications
+      ScopedTypeVariables
+      FlexibleContexts
+      FlexibleInstances
+      MultiParamTypeClasses
+      GeneralizedNewtypeDeriving
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , async
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , mtl
+    , network
+    , process
+    , stm
+    , text
+    , transformers
+    , unison-mcp
+    , wai
+    , warp
+    , websockets
+  default-language: Haskell2010
+
+test-suite unison-mcp-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      IntegrationSpec
+      Paths_unison_mcp
+  hs-source-dirs:
+      test
+  default-extensions:
+      OverloadedStrings
+      DeriveGeneric
+      DeriveAnyClass
+      DerivingStrategies
+      LambdaCase
+      RecordWildCards
+      NamedFieldPuns
+      TupleSections
+      TypeApplications
+      ScopedTypeVariables
+      FlexibleContexts
+      FlexibleInstances
+      MultiParamTypeClasses
+      GeneralizedNewtypeDeriving
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuickCheck
+    , aeson
+    , async
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , hspec
+    , mtl
+    , network
+    , process
+    , stm
+    , temporary
+    , text
+    , transformers
+    , unison-mcp
+    , wai
+    , warp
+    , websockets
+  default-language: Haskell2010

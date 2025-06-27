@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "unison": {
+      "command": "stack",
+      "args": ["exec", "unison-mcp-server", "--", "."],
+      "env": {
+        "UNISON_CODEBASE": "."
+      }
+    }
+  }
+}

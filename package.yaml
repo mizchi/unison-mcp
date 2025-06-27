@@ -1,0 +1,99 @@
+name:                unison-mcp
+version:             0.1.0.0
+github:              "mizchi/unison-mcp"
+license:             MIT
+author:              "mizchi"
+maintainer:          "example@example.com"
+copyright:           "2024 mizchi"
+
+extra-source-files:
+- README.md
+
+description:         Please see the README on GitHub at <https://github.com/mizchi/unison-mcp#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- aeson
+- async
+- bytestring
+- containers
+- directory
+- filepath
+- mtl
+- network
+- process
+- stm
+- text
+- transformers
+- wai
+- warp
+- websockets
+
+default-extensions:
+- OverloadedStrings
+- DeriveGeneric
+- DeriveAnyClass
+- DerivingStrategies
+- LambdaCase
+- RecordWildCards
+- NamedFieldPuns
+- TupleSections
+- TypeApplications
+- ScopedTypeVariables
+- FlexibleContexts
+- FlexibleInstances
+- MultiParamTypeClasses
+- GeneralizedNewtypeDeriving
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+  source-dirs: src
+
+executables:
+  unison-mcp:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - unison-mcp
+
+  test-client:
+    main:                Main.hs
+    source-dirs:         test-client
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - unison-mcp
+    - process
+
+tests:
+  unison-mcp-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - unison-mcp
+    - hspec
+    - QuickCheck
+    - directory
+    - filepath
+    - process
+    - temporary

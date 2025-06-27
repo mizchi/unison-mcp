@@ -1,0 +1,58 @@
+# Stack
+.stack-work/
+*~
+
+# Haskell
+dist
+dist-*
+cabal-dev
+*.o
+*.hi
+*.hie
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+*.prof
+*.aux
+*.hp
+*.eventlog
+.stack-work/
+cabal.project.local
+cabal.project.local~
+.HTF/
+.ghc.environment.*
+
+# Unison
+.unisonHistory
+scratch.u
+.unison/
+
+# Editor
+.vscode/
+*.swp
+*.swo
+*~
+.#*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.exe
+unison-mcp-server-exe
+
+# Test artifacts
+test_*.py
+*.pyc
+__pycache__/
+
+# Temporary files
+*.tmp
+*.log
+temp_*
