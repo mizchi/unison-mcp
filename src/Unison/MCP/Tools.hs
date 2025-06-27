@@ -288,6 +288,75 @@ availableTools =
           , "required" .= ["command" :: Text]
           ]
       }
+  , Tool
+      { toolName = "ucm_view_scratch"
+      , toolDescription = Just "View the contents of scratch.u file without loading it into UCM"
+      , toolInputSchema = object
+          [ "type" .= String "object"
+          , "properties" .= object []
+          ]
+      }
+  , Tool
+      { toolName = "ucm_load"
+      , toolDescription = Just "Load a Unison file and typecheck it"
+      , toolInputSchema = object
+          [ "type" .= String "object"
+          , "properties" .= object
+              [ "file" .= object
+                  [ "type" .= String "string"
+                  , "description" .= String "File path to load (default: scratch.u)"
+                  ]
+              ]
+          ]
+      }
+  , Tool
+      { toolName = "ucm_projects"
+      , toolDescription = Just "List all projects (alias for ucm_list_projects)"
+      , toolInputSchema = object
+          [ "type" .= String "object"
+          , "properties" .= object []
+          ]
+      }
+  , Tool
+      { toolName = "ucm_switch"
+      , toolDescription = Just "Switch to a different project or branch"
+      , toolInputSchema = object
+          [ "type" .= String "object"
+          , "properties" .= object
+              [ "target" .= object
+                  [ "type" .= String "string"
+                  , "description" .= String "Project or project/branch to switch to"
+                  ]
+              ]
+          , "required" .= ["target" :: Text]
+          ]
+      }
+  , Tool
+      { toolName = "ucm_history"
+      , toolDescription = Just "Show the history of changes in the current branch"
+      , toolInputSchema = object
+          [ "type" .= String "object"
+          , "properties" .= object
+              [ "limit" .= object
+                  [ "type" .= String "number"
+                  , "description" .= String "Number of entries to show (default: 10)"
+                  ]
+              ]
+          ]
+      }
+  , Tool
+      { toolName = "ucm_help"
+      , toolDescription = Just "Show help for UCM commands"
+      , toolInputSchema = object
+          [ "type" .= String "object"
+          , "properties" .= object
+              [ "command" .= object
+                  [ "type" .= String "string"
+                  , "description" .= String "Specific command to get help for (optional)"
+                  ]
+              ]
+          ]
+      }
   ]
 
 -- | Handle a tool call
@@ -313,6 +382,12 @@ handleToolCall ucm toolCall = case toolCallName toolCall of
   "ucm_share_search" -> handleShareSearch ucm (toolCallArguments toolCall)
   "ucm_share_install" -> handleShareInstall ucm (toolCallArguments toolCall)
   "ucm_command" -> handleCommand ucm (toolCallArguments toolCall)
+  "ucm_view_scratch" -> handleViewScratch
+  "ucm_load" -> handleLoad ucm (toolCallArguments toolCall)
+  "ucm_projects" -> handleListProjects ucm
+  "ucm_switch" -> handleSwitch ucm (toolCallArguments toolCall)
+  "ucm_history" -> handleHistory ucm (toolCallArguments toolCall)
+  "ucm_help" -> handleHelp ucm (toolCallArguments toolCall)
   _ -> pure $ ToolResult
     { toolResultContent = [textContent $ "Unknown tool: " <> toolCallName toolCall]
     , toolResultIsError = Just True
@@ -658,4 +733,70 @@ handleCommand ucm (Just params) = do
         _ -> pure $ errorResult "Invalid command parameter"
     _ -> pure $ errorResult "Invalid parameters"
 handleCommand _ Nothing = pure $ errorResult "Missing parameters"
+
+-- | Implementation of ucm_view_scratch
+handleViewScratch :: MonadIO m => m ToolResult
+handleViewScratch = do
+  content <- liftIO UCM.viewScratchFile
+  pure $ ToolResult
+    { toolResultContent = [textContent content]
+    , toolResultIsError = Just False
+    }
+
+-- | Implementation of ucm_load
+handleLoad :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
+handleLoad ucm params = do
+  let filename = case params of
+        Just (Object o) -> case lookup "file" (toList o) of
+          Just (String f) -> f
+          _ -> "scratch.u"
+        _ -> "scratch.u"
+  result <- liftIO $ UCM.sendCommand ucm ("load " <> filename)
+  pure $ ToolResult
+    { toolResultContent = [textContent result]
+    , toolResultIsError = Just False
+    }
+
+-- | Implementation of ucm_switch
+handleSwitch :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
+handleSwitch ucm (Just params) = do
+  case params of
+    Object o -> case lookup "target" (toList o) of
+      Just (String target) -> do
+        result <- liftIO $ UCM.sendCommand ucm ("switch " <> target)
+        pure $ ToolResult
+          { toolResultContent = [textContent result]
+          , toolResultIsError = Just False
+          }
+      _ -> pure $ errorResult "Invalid target parameter"
+    _ -> pure $ errorResult "Invalid parameters"
+handleSwitch _ Nothing = pure $ errorResult "Missing parameters"
+
+-- | Implementation of ucm_history
+handleHistory :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
+handleHistory ucm params = do
+  let limitText = case params of
+        Just (Object o) -> case lookup "limit" (toList o) of
+          Just (Number n) -> T.pack $ show (round n :: Int)
+          _ -> "10"
+        _ -> "10"
+  result <- liftIO $ UCM.sendCommand ucm ("history " <> limitText)
+  pure $ ToolResult
+    { toolResultContent = [textContent result]
+    , toolResultIsError = Just False
+    }
+
+-- | Implementation of ucm_help
+handleHelp :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
+handleHelp ucm params = do
+  let cmd = case params of
+        Just (Object o) -> case lookup "command" (toList o) of
+          Just (String c) -> "help " <> c
+          _ -> "help"
+        _ -> "help"
+  result <- liftIO $ UCM.sendCommand ucm cmd
+  pure $ ToolResult
+    { toolResultContent = [textContent result]
+    , toolResultIsError = Just False
+    }
 

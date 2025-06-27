@@ -26,6 +26,7 @@ module Unison.MCP.UCM
   , installLibrary
   , searchShare
   , installFromShare
+  , viewScratchFile
   ) where
 
 import Control.Concurrent (forkIO, threadDelay)
@@ -377,4 +378,12 @@ installFromShare handle libraryPath asName = do
         Nothing -> "lib.install " <> libraryPath
         Just name -> "lib.install " <> libraryPath <> " " <> name
   sendCommand handle command
+
+-- | View the contents of scratch.u file
+viewScratchFile :: IO Text
+viewScratchFile = do
+  scratchExists <- doesFileExist "scratch.u"
+  if scratchExists
+    then TIO.readFile "scratch.u"
+    else return "scratch.u file not found. Create one with 'ucm_test' or manually."
 

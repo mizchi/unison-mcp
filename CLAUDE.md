@@ -92,6 +92,18 @@ mcp__unison__ucm_test
 mcp__unison__ucm_test で {"pattern": "test.add"}
 ```
 
+## scratch.uファイルの表示
+
+`mcp__unison__ucm_view_scratch`を使うと、scratch.uファイルの内容を表示できます（UCMにloadせずに）：
+
+### 使用例
+```
+# scratch.uの内容を表示
+mcp__unison__ucm_view_scratch
+```
+
+これは現在のディレクトリにあるscratch.uファイルの内容を単に表示するだけで、UCMにロードはしません。
+
 ## トラブルシューティング
 
 ### ライブラリが見つからない場合

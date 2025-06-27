@@ -91,6 +91,21 @@ ucm
 .myproject> project.create myproject
 ```
 
+### UCMとの連携
+
+MCPサーバーと同じコードベースを使用してUCMを起動するには：
+
+```bash
+# MCPサーバーのディレクトリから起動
+cd /path/to/unison-mcp-server
+ucm
+
+# または、どこからでも --codebase オプションを使用
+ucm --codebase /path/to/unison-mcp-server/.unison
+```
+
+これにより、MCPサーバーと同じプロジェクト・ブランチにアクセスできます。
+
 ### Claude での使用例
 
 Claude Desktopで以下のようなプロンプトを使用：
