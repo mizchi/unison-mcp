@@ -152,7 +152,7 @@ MCPツールとして以下が利用可能です：
 - `mcp__unison__ucm_update` - 既存定義の更新
 - `mcp__unison__ucm_ls` - 名前空間の内容一覧
 - `mcp__unison__ucm_delete` - 定義の削除
-- `mcp__unison__ucm_test` - テストの実行
+- `mcp__unison__ucm_test` - テストの実行（scratch.uがない場合は自動生成）
 - `mcp__unison__ucm_dependencies` - 定義の依存関係表示
 
 ### プロジェクト管理

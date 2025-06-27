@@ -170,13 +170,13 @@ availableTools =
       }
   , Tool
       { toolName = "ucm_test"
-      , toolDescription = Just "Run tests in the codebase"
+      , toolDescription = Just "Run tests in the codebase. If no scratch.u exists, creates one with sample tests"
       , toolInputSchema = object
           [ "type" .= String "object"
           , "properties" .= object
               [ "pattern" .= object
                   [ "type" .= String "string"
-                  , "description" .= String "Test pattern to match (optional)"
+                  , "description" .= String "Test pattern to match (optional). Without pattern, loads scratch.u if exists"
                   ]
               ]
           ]
