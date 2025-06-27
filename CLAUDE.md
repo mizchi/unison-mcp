@@ -50,17 +50,26 @@ mcp__unison__ucm_lib_install で @owner/library を指定
 
 ## 汎用コマンド実行
 
-`mcp__unison__ucm_command`を使うと、個別のMCPツールが用意されていないUCMコマンドも実行できます：
+`mcp__unison__ucm_command`を使うと、個別のMCPツールが用意されていないUCMコマンドも実行できます。
+
+### 重要な注意事項
+- これは低レベルツールです - 使用前にコマンド構文と型要件を確認してください
+- UCMからのエラーはそのまま返されます
+- 引数は`args`配列として個別に渡します
+
+### 使用例
 
 ```
-# 例
-mcp__unison__ucm_command で "help" を実行
-mcp__unison__ucm_command で "pull @unison/base/main" を実行
-mcp__unison__ucm_command で "push myproject.public" を実行
-mcp__unison__ucm_command で "fork .base lib.mybase" を実行
-mcp__unison__ucm_command で "reflog" を実行
-mcp__unison__ucm_command で "undo" を実行
-mcp__unison__ucm_command で "history" を実行
+# 引数なしのコマンド
+mcp__unison__ucm_command で {"command": "help"} を実行
+mcp__unison__ucm_command で {"command": "reflog"} を実行
+
+# 引数付きのコマンド
+mcp__unison__ucm_command で {"command": "pull", "args": ["@unison/base/main"]} を実行
+mcp__unison__ucm_command で {"command": "push", "args": ["myproject.public"]} を実行
+mcp__unison__ucm_command で {"command": "fork", "args": [".base", "lib.mybase"]} を実行
+mcp__unison__ucm_command で {"command": "view", "args": ["factorial"]} を実行
+mcp__unison__ucm_command で {"command": "diff.namespace", "args": ["1", "7"]} を実行
 ```
 
 この汎用コマンドにより、UCMの全機能にアクセスできます。

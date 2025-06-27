@@ -173,7 +173,10 @@ MCPツールとして以下が利用可能です：
 
 ### 汎用コマンド実行
 - `mcp__unison__ucm_command` - 任意のUCMコマンドを直接実行
-  - 例: pull, push, fork, reflog, undo, redo, help など
+  - 低レベルツール：使用前にコマンド構文と型要件を確認してください
+  - UCMからのエラーはそのまま返されます
+  - 例: `{"command": "pull", "args": ["@unison/base/main"]}`
+  - 例: `{"command": "fork", "args": ["testUuid", "myTests.uuid"]}`
   - 将来追加されるUCMコマンドにも対応可能
 
 ### ライブラリの使用例

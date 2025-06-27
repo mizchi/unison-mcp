@@ -7,6 +7,7 @@ module Unison.MCP.Tools
 
 import Data.Aeson
 import Data.Aeson.KeyMap (toList)
+import qualified Data.Vector as V
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -270,13 +271,18 @@ availableTools =
       }
   , Tool
       { toolName = "ucm_command"
-      , toolDescription = Just "Execute any UCM command directly"
+      , toolDescription = Just "Execute any UCM command directly. This is a low-level tool - verify command syntax and type requirements before use. Errors from UCM will be returned as-is."
       , toolInputSchema = object
           [ "type" .= String "object"
           , "properties" .= object
               [ "command" .= object
                   [ "type" .= String "string"
-                  , "description" .= String "UCM command to execute (e.g., 'pull', 'push', 'fork', 'reflog', 'help')"
+                  , "description" .= String "UCM command (e.g., 'pull', 'push', 'fork', 'reflog', 'help')"
+                  ]
+              , "args" .= object
+                  [ "type" .= String "array"
+                  , "items" .= object ["type" .= String "string"]
+                  , "description" .= String "Command arguments as separate strings (e.g., ['@unison/base/main', 'my-base'])"
                   ]
               ]
           , "required" .= ["command" :: Text]
@@ -630,14 +636,26 @@ handleShareInstall _ Nothing = pure $ errorResult "Missing parameters"
 handleCommand :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
 handleCommand ucm (Just params) = do
   case params of
-    Object o -> case lookup "command" (toList o) of
-      Just (String cmd) -> do
-        result <- liftIO $ UCM.sendCommand ucm cmd
-        pure $ ToolResult
-          { toolResultContent = [textContent result]
-          , toolResultIsError = Just False
-          }
-      _ -> pure $ errorResult "Invalid command parameter"
+    Object o -> do
+      let cmdParam = lookup "command" (toList o)
+          argsParam = lookup "args" (toList o)
+      case cmdParam of
+        Just (String cmd) -> do
+          -- Extract arguments if provided
+          let args = case argsParam of
+                Just (Array arr) -> 
+                  [ arg | String arg <- V.toList arr ]
+                _ -> []
+          -- Construct full command with arguments
+          let fullCommand = if null args
+                then cmd
+                else cmd <> " " <> T.unwords args
+          result <- liftIO $ UCM.sendCommand ucm fullCommand
+          pure $ ToolResult
+            { toolResultContent = [textContent result]
+            , toolResultIsError = Just False
+            }
+        _ -> pure $ errorResult "Invalid command parameter"
     _ -> pure $ errorResult "Invalid parameters"
 handleCommand _ Nothing = pure $ errorResult "Missing parameters"
 

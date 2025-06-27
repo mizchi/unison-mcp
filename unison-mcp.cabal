@@ -62,6 +62,7 @@ library
     , stm
     , text
     , transformers
+    , vector
     , wai
     , warp
     , websockets
@@ -104,6 +105,7 @@ executable test-client
     , text
     , transformers
     , unison-mcp
+    , vector
     , wai
     , warp
     , websockets
@@ -146,6 +148,7 @@ executable unison-mcp
     , text
     , transformers
     , unison-mcp
+    , vector
     , wai
     , warp
     , websockets
@@ -193,6 +196,7 @@ test-suite unison-mcp-test
     , text
     , transformers
     , unison-mcp
+    , vector
     , wai
     , warp
     , websockets
