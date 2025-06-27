@@ -81,6 +81,39 @@ Claude Desktop や他のMCPクライアントの設定ファイルに以下を�
 }
 ```
 
+### 7. ライブラリ管理
+
+#### `ucm_lib_install` - ライブラリのインストール
+```json
+{
+  "tool": "ucm_lib_install",
+  "arguments": {
+    "library": "@unison/http"
+  }
+}
+```
+
+#### `ucm_share_search` - Unison Shareでライブラリを検索
+```json
+{
+  "tool": "ucm_share_search",
+  "arguments": {
+    "query": "http"
+  }
+}
+```
+
+#### `ucm_share_install` - Unison Shareから特定バージョンをインストール
+```json
+{
+  "tool": "ucm_share_install",
+  "arguments": {
+    "library": "@unison/http/releases/3.9.1",
+    "as": "http_v3"  // オプション：ローカル名を指定
+  }
+}
+```
+
 ## 使用例
 
 ### AIアシスタントとの対話例

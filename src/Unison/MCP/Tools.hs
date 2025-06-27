@@ -236,6 +236,38 @@ availableTools =
           , "required" .= ["library" :: Text]
           ]
       }
+  , Tool
+      { toolName = "ucm_share_search"
+      , toolDescription = Just "Search for libraries on Unison Share"
+      , toolInputSchema = object
+          [ "type" .= String "object"
+          , "properties" .= object
+              [ "query" .= object
+                  [ "type" .= String "string"
+                  , "description" .= String "Search query for Unison Share"
+                  ]
+              ]
+          , "required" .= ["query" :: Text]
+          ]
+      }
+  , Tool
+      { toolName = "ucm_share_install"
+      , toolDescription = Just "Install a library from Unison Share with full path"
+      , toolInputSchema = object
+          [ "type" .= String "object"
+          , "properties" .= object
+              [ "library" .= object
+                  [ "type" .= String "string"
+                  , "description" .= String "Full library path (e.g., @unison/base/releases/3.21.0)"
+                  ]
+              , "as" .= object
+                  [ "type" .= String "string"
+                  , "description" .= String "Optional local name for the library"
+                  ]
+              ]
+          , "required" .= ["library" :: Text]
+          ]
+      }
   ]
 
 -- | Handle a tool call
@@ -258,6 +290,8 @@ handleToolCall ucm toolCall = case toolCallName toolCall of
   "ucm_branch_create" -> handleBranchCreate ucm (toolCallArguments toolCall)
   "ucm_merge" -> handleMerge ucm (toolCallArguments toolCall)
   "ucm_lib_install" -> handleLibInstall ucm (toolCallArguments toolCall)
+  "ucm_share_search" -> handleShareSearch ucm (toolCallArguments toolCall)
+  "ucm_share_install" -> handleShareInstall ucm (toolCallArguments toolCall)
   _ -> pure $ ToolResult
     { toolResultContent = [textContent $ "Unknown tool: " <> toolCallName toolCall]
     , toolResultIsError = Just True
@@ -540,4 +574,40 @@ handleLibInstall ucm (Just params) = do
       _ -> pure $ errorResult "Invalid library parameter"
     _ -> pure $ errorResult "Invalid parameters"
 handleLibInstall _ Nothing = pure $ errorResult "Missing parameters"
+
+-- | Implementation of ucm_share_search
+handleShareSearch :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
+handleShareSearch ucm (Just params) = do
+  case params of
+    Object o -> case lookup "query" (toList o) of
+      Just (String query) -> do
+        result <- liftIO $ UCM.searchShare ucm query
+        pure $ ToolResult
+          { toolResultContent = [textContent result]
+          , toolResultIsError = Just False
+          }
+      _ -> pure $ errorResult "Invalid query parameter"
+    _ -> pure $ errorResult "Invalid parameters"
+handleShareSearch _ Nothing = pure $ errorResult "Missing parameters"
+
+-- | Implementation of ucm_share_install
+handleShareInstall :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
+handleShareInstall ucm (Just params) = do
+  case params of
+    Object o -> do
+      let libraryParam = lookup "library" (toList o)
+          asParam = lookup "as" (toList o)
+      case libraryParam of
+        Just (String library) -> do
+          let asName = case asParam of
+                Just (String name) -> Just name
+                _ -> Nothing
+          result <- liftIO $ UCM.installFromShare ucm library asName
+          pure $ ToolResult
+            { toolResultContent = [textContent result]
+            , toolResultIsError = Just False
+            }
+        _ -> pure $ errorResult "Invalid library parameter"
+    _ -> pure $ errorResult "Invalid parameters"
+handleShareInstall _ Nothing = pure $ errorResult "Missing parameters"
 

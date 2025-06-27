@@ -23,19 +23,19 @@ module Unison.MCP.UCM
   , createBranch
   , mergeBranch
   , installLibrary
+  , searchShare
+  , installFromShare
   ) where
 
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Concurrent.STM
 import Control.Exception (bracket, catch, IOException)
-import Control.Monad (forever, when, void)
-import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad (forever, when)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import System.IO
 import System.Process
-import System.Exit (ExitCode(..))
 import System.Directory (findExecutable, removeFile)
 
 -- | Handle to a running UCM process
@@ -64,7 +64,7 @@ startUCM codebasePath = do
   let cmd = "ucm"
       args = ["--codebase-create", codebasePath, "--no-file-watch"]
   
-  (Just stdin, Just stdout, Just stderr, ph) <- 
+  (Just ucmStdin, Just ucmStdout, Just ucmStderr, ph) <- 
     createProcess (proc cmd args)
       { std_in = CreatePipe
       , std_out = CreatePipe
@@ -72,9 +72,9 @@ startUCM codebasePath = do
       }
   
   -- Set handles to line buffering mode for better interaction
-  hSetBuffering stdin LineBuffering
-  hSetBuffering stdout LineBuffering
-  hSetBuffering stderr LineBuffering
+  hSetBuffering ucmStdin LineBuffering
+  hSetBuffering ucmStdout LineBuffering
+  hSetBuffering ucmStderr LineBuffering
   
   -- Create output buffer
   outputVar <- newTVarIO []
@@ -82,18 +82,18 @@ startUCM codebasePath = do
   
   let handle = UCMHandle
         { ucmProcess = ph
-        , ucmStdin = stdin
-        , ucmStdout = stdout
-        , ucmStderr = stderr
+        , ucmStdin = ucmStdin
+        , ucmStdout = ucmStdout
+        , ucmStderr = ucmStderr
         , ucmOutput = outputVar
         , ucmErrors = errorVar
         }
   
   -- Start output reader thread with error handling
-  _ <- forkIO $ readOutput stdout outputVar
+  _ <- forkIO $ readOutput ucmStdout outputVar
   
   -- Start stderr reader thread (but don't output to stderr during MCP)
-  _ <- forkIO $ readError stderr errorVar
+  _ <- forkIO $ readError ucmStderr errorVar
   
   -- Check if process started successfully
   exitCode <- getProcessExitCode ph
@@ -130,7 +130,7 @@ readOutput h outputVar = forever $ do
 -- | Read stderr output (silently discard during MCP operation)
 readError :: Handle -> TVar [Text] -> IO ()
 readError h errorVar = forever $ do
-  line <- TIO.hGetLine h `catch` \(e :: IOException) -> do
+  line <- TIO.hGetLine h `catch` \(_ :: IOException) -> do
     -- Silently ignore errors during MCP operation
     return ""
   -- Store stderr output for debugging
@@ -167,7 +167,8 @@ sendCommand handle cmd = do
   hFlush (ucmStdin handle)
   
   -- Wait for response with multiple attempts
-  let waitForOutput attempts = do
+  let waitForOutput :: Int -> IO ()
+      waitForOutput attempts = do
         threadDelay 100000  -- 0.1 seconds
         output <- atomically $ readTVar (ucmOutput handle)
         if null output && attempts > 0
@@ -178,9 +179,9 @@ sendCommand handle cmd = do
   
   -- Collect output
   output <- atomically $ do
-    lines <- readTVar (ucmOutput handle)
+    outputLines <- readTVar (ucmOutput handle)
     writeTVar (ucmOutput handle) []
-    return (reverse lines)
+    return (reverse outputLines)
   
   return $ T.unlines output
 
@@ -291,4 +292,34 @@ mergeBranch handle branchName =
 installLibrary :: UCMHandle -> Text -> IO Text
 installLibrary handle libraryName =
   sendCommand handle $ "lib.install " <> libraryName
+
+-- | Search for libraries on Unison Share
+searchShare :: UCMHandle -> Text -> IO Text
+searchShare handle query = do
+  -- Use the `find` command with special syntax for Share search
+  result <- sendCommand handle $ "find.global " <> query
+  -- If find.global doesn't work, try alternative approach
+  if T.isInfixOf "unknown command" result || T.isInfixOf "I don't know" result
+    then do
+      -- Try using lib.search if available
+      searchResult <- sendCommand handle $ "lib.search " <> query
+      if T.isInfixOf "unknown command" searchResult || T.isInfixOf "I don't know" searchResult
+        then return $ "Note: Direct Share search is not available in UCM. You can:\n" <>
+                     "1. Browse libraries at https://share.unison-lang.org/\n" <>
+                     "2. Use 'lib.install @owner/library' to install known libraries\n" <>
+                     "3. Common libraries include:\n" <>
+                     "   - @unison/base - Base library\n" <>
+                     "   - @unison/http - HTTP client/server\n" <>
+                     "   - @unison/distributed - Distributed computing\n" <>
+                     "   - @unison/cli - CLI utilities"
+        else return searchResult
+    else return result
+
+-- | Install a library from Share with optional local name
+installFromShare :: UCMHandle -> Text -> Maybe Text -> IO Text
+installFromShare handle libraryPath asName = do
+  let command = case asName of
+        Nothing -> "lib.install " <> libraryPath
+        Just name -> "lib.install " <> libraryPath <> " " <> name
+  sendCommand handle command
 

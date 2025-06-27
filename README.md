@@ -144,23 +144,30 @@ filter p = cases
 
 MCPツールとして以下が利用可能です：
 
+### 基本操作
 - `mcp__unison__ucm_find` - 定義の検索
 - `mcp__unison__ucm_add` - 新しい定義の追加
 - `mcp__unison__ucm_run` - Unison式の実行
 - `mcp__unison__ucm_view` - 定義のソースコード表示
-- `mcp__unison__ucm_list_projects` - プロジェクト一覧
-- `mcp__unison__ucm_switch_project` - プロジェクトの切り替え
-- `mcp__unison__ucm_list_branches` - ブランチ一覧
-- `mcp__unison__ucm_switch_branch` - ブランチの切り替え
-- `mcp__unison__ucm_dependencies` - 定義の依存関係表示
 - `mcp__unison__ucm_update` - 既存定義の更新
 - `mcp__unison__ucm_ls` - 名前空間の内容一覧
 - `mcp__unison__ucm_delete` - 定義の削除
 - `mcp__unison__ucm_test` - テストの実行
+- `mcp__unison__ucm_dependencies` - 定義の依存関係表示
+
+### プロジェクト管理
+- `mcp__unison__ucm_list_projects` - プロジェクト一覧
+- `mcp__unison__ucm_switch_project` - プロジェクトの切り替え
 - `mcp__unison__ucm_project_create` - 新規プロジェクト作成
+- `mcp__unison__ucm_list_branches` - ブランチ一覧
+- `mcp__unison__ucm_switch_branch` - ブランチの切り替え
 - `mcp__unison__ucm_branch_create` - 新規ブランチ作成
 - `mcp__unison__ucm_merge` - ブランチのマージ
+
+### ライブラリ管理
 - `mcp__unison__ucm_lib_install` - ライブラリのインストール
+- `mcp__unison__ucm_share_search` - Unison Shareでライブラリを検索
+- `mcp__unison__ucm_share_install` - Unison Shareから特定バージョンをインストール
 
 ## トラブルシューティング
 

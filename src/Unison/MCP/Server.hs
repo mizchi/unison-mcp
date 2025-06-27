@@ -8,8 +8,7 @@ module Unison.MCP.Server
 
 import Control.Concurrent.STM
 import Control.Exception (catch, SomeException, finally)
-import Control.Monad (forever, when, void)
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad (forever)
 import Data.Aeson
 import Data.Aeson.KeyMap (singleton)
 import qualified Data.ByteString.Lazy as LBS
@@ -102,7 +101,7 @@ sendResponse response = do
 
 -- | Handle a JSON-RPC request
 handleRequest :: ServerState -> Request -> IO Response
-handleRequest state request@Request{..} = do
+handleRequest state Request{..} = do
   initialized <- readTVarIO (stateInitialized state)
   
   -- Check if initialization is required
@@ -166,7 +165,7 @@ initializeUCM state = do
 handleInitialize :: ServerState -> Maybe Value -> IO (Either MCPError Value)
 handleInitialize state (Just params) = do
   case fromJSON params :: Result InitializeParams of
-    Success initParams -> do
+    Success _ -> do
       -- Initialize UCM if not already initialized
       maybeUCM <- readTVarIO (stateUCM state)
       case maybeUCM of
@@ -185,17 +184,17 @@ handleInitialize state (Just params) = do
       }
   where
     continueInitialization :: ServerState -> IO (Either MCPError Value)
-    continueInitialization state = do
+    continueInitialization serverState = do
       -- Mark as initialized
-      atomically $ writeTVar (stateInitialized state) True
+      atomically $ writeTVar (stateInitialized serverState) True
       
       -- Return initialization result
       let result = InitializeResult
             { initResultProtocolVersion = "2024-11-05"
             , initResultCapabilities = singleton "tools" (object [])
             , initResultServerInfo = ServerInfo
-                { serverName = configServerName (stateConfig state)
-                , serverVersion = configServerVersion (stateConfig state)
+                { serverName = configServerName (stateConfig serverState)
+                , serverVersion = configServerVersion (stateConfig serverState)
                 }
             }
       return $ Right $ toJSON result
