@@ -304,14 +304,17 @@ searchShare handle query = do
       -- Try using lib.search if available
       searchResult <- sendCommand handle $ "lib.search " <> query
       if T.isInfixOf "unknown command" searchResult || T.isInfixOf "I don't know" searchResult
-        then return $ "Note: Direct Share search is not available in UCM. You can:\n" <>
-                     "1. Browse libraries at https://share.unison-lang.org/\n" <>
-                     "2. Use 'lib.install @owner/library' to install known libraries\n" <>
-                     "3. Common libraries include:\n" <>
-                     "   - @unison/base - Base library\n" <>
-                     "   - @unison/http - HTTP client/server\n" <>
-                     "   - @unison/distributed - Distributed computing\n" <>
-                     "   - @unison/cli - CLI utilities"
+        then return $ "Note: UCM does not support direct Share search. Try:\n" <>
+                     "1. Browse https://share.unison-lang.org/ to find libraries\n" <>
+                     "2. Use 'lib.install @owner/library' if you know the library path\n" <>
+                     "3. After install, check 'ls lib' to see installed libraries\n" <>
+                     "4. Installed libraries follow naming convention: @owner/library -> lib.owner_library_version\n" <>
+                     "5. Common libraries:\n" <>
+                     "   - @unison/base - Base library with core types and functions\n" <>
+                     "   - @unison/http - HTTP client/server functionality\n" <>
+                     "   - @unison/distributed - Distributed computing utilities\n" <>
+                     "   - @unison/cli - Command-line interface utilities\n" <>
+                     "   - @hojberg/nanoid - NanoID unique string generator"
         else return searchResult
     else return result
 

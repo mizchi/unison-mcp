@@ -165,9 +165,34 @@ MCPツールとして以下が利用可能です：
 - `mcp__unison__ucm_merge` - ブランチのマージ
 
 ### ライブラリ管理
-- `mcp__unison__ucm_lib_install` - ライブラリのインストール
-- `mcp__unison__ucm_share_search` - Unison Shareでライブラリを検索
+- `mcp__unison__ucm_lib_install` - ライブラリのインストール（例: @unison/base）
+- `mcp__unison__ucm_share_search` - Unison Shareのライブラリ情報を表示（実際の検索は未対応）
 - `mcp__unison__ucm_share_install` - Unison Shareから特定バージョンをインストール
+- インストール後: `mcp__unison__ucm_ls` で "lib" を指定して確認
+- 命名規則: @owner/library → lib.owner_library_version
+
+### ライブラリの使用例
+
+```unison
+-- baseライブラリをインストール後
+use lib.unison_base_3_21_0
+
+-- UUIDの生成
+testUuid : '{IO, Exception} ()
+testUuid = do
+  uuid = Uuid.parse "550e8400-e29b-41d4-a716-446655440000"
+  printLine (Uuid.toText uuid)
+
+-- nanoidライブラリをインストール後
+use lib.hojberg_nanoid_1_0_0
+use lib.hojberg_nanoid_1_0_0.NanoId
+
+-- NanoIDの生成
+testNanoId : '{IO, Exception} ()
+testNanoId = do
+  id = nanoid()
+  printLine (NanoId.toText id)
+```
 
 ## トラブルシューティング
 
