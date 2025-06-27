@@ -6,6 +6,7 @@ module Unison.MCP.UCM
   , withUCM
   , startUCM
   , stopUCM
+  , sendCommand
   , findDefinitions
   , addCode
   , runExpression

@@ -268,6 +268,20 @@ availableTools =
           , "required" .= ["library" :: Text]
           ]
       }
+  , Tool
+      { toolName = "ucm_command"
+      , toolDescription = Just "Execute any UCM command directly"
+      , toolInputSchema = object
+          [ "type" .= String "object"
+          , "properties" .= object
+              [ "command" .= object
+                  [ "type" .= String "string"
+                  , "description" .= String "UCM command to execute (e.g., 'pull', 'push', 'fork', 'reflog', 'help')"
+                  ]
+              ]
+          , "required" .= ["command" :: Text]
+          ]
+      }
   ]
 
 -- | Handle a tool call
@@ -292,6 +306,7 @@ handleToolCall ucm toolCall = case toolCallName toolCall of
   "ucm_lib_install" -> handleLibInstall ucm (toolCallArguments toolCall)
   "ucm_share_search" -> handleShareSearch ucm (toolCallArguments toolCall)
   "ucm_share_install" -> handleShareInstall ucm (toolCallArguments toolCall)
+  "ucm_command" -> handleCommand ucm (toolCallArguments toolCall)
   _ -> pure $ ToolResult
     { toolResultContent = [textContent $ "Unknown tool: " <> toolCallName toolCall]
     , toolResultIsError = Just True
@@ -610,4 +625,19 @@ handleShareInstall ucm (Just params) = do
         _ -> pure $ errorResult "Invalid library parameter"
     _ -> pure $ errorResult "Invalid parameters"
 handleShareInstall _ Nothing = pure $ errorResult "Missing parameters"
+
+-- | Implementation of ucm_command
+handleCommand :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
+handleCommand ucm (Just params) = do
+  case params of
+    Object o -> case lookup "command" (toList o) of
+      Just (String cmd) -> do
+        result <- liftIO $ UCM.sendCommand ucm cmd
+        pure $ ToolResult
+          { toolResultContent = [textContent result]
+          , toolResultIsError = Just False
+          }
+      _ -> pure $ errorResult "Invalid command parameter"
+    _ -> pure $ errorResult "Invalid parameters"
+handleCommand _ Nothing = pure $ errorResult "Missing parameters"
 

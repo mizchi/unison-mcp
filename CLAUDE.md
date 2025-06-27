@@ -48,6 +48,23 @@ mcp__unison__ucm_lib_install で @owner/library を指定
 ### @unison/cli
 - コマンドラインインターフェース構築用ツール
 
+## 汎用コマンド実行
+
+`mcp__unison__ucm_command`を使うと、個別のMCPツールが用意されていないUCMコマンドも実行できます：
+
+```
+# 例
+mcp__unison__ucm_command で "help" を実行
+mcp__unison__ucm_command で "pull @unison/base/main" を実行
+mcp__unison__ucm_command で "push myproject.public" を実行
+mcp__unison__ucm_command で "fork .base lib.mybase" を実行
+mcp__unison__ucm_command で "reflog" を実行
+mcp__unison__ucm_command で "undo" を実行
+mcp__unison__ucm_command で "history" を実行
+```
+
+この汎用コマンドにより、UCMの全機能にアクセスできます。
+
 ## トラブルシューティング
 
 ### ライブラリが見つからない場合
