@@ -56,3 +56,11 @@ __pycache__/
 *.tmp
 *.log
 temp_*
+test-codebase--*
+
+# Archive and examples (local experiments)
+archive/
+examples/javascript/
+
+# Scripts
+unison-script.sh

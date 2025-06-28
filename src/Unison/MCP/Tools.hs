@@ -15,60 +15,22 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Unison.MCP.Protocol
 import Unison.MCP.UCM (UCMHandle)
 import qualified Unison.MCP.UCM as UCM
+import Unison.MCP.ToolHelpers
 
 -- | List of available tools
 availableTools :: [Tool]
 availableTools =
-  [ Tool
-      { toolName = "ucm_find"
-      , toolDescription = Just "Search for definitions in the Unison codebase"
-      , toolInputSchema = object
-          [ "type" .= String "object"
-          , "properties" .= object
-              [ "query" .= object
-                  [ "type" .= String "string"
-                  , "description" .= String "Search query (name or type)"
-                  ]
-              ]
-          , "required" .= ["query" :: Text]
-          ]
-      }
-  , Tool
-      { toolName = "ucm_add"
-      , toolDescription = Just "Add definitions to the codebase"
-      , toolInputSchema = object
-          [ "type" .= String "object"
-          , "properties" .= object
-              [ "code" .= object
-                  [ "type" .= String "string"
-                  , "description" .= String "Unison code to add"
-                  ]
-              ]
-          , "required" .= ["code" :: Text]
-          ]
-      }
-  , Tool
-      { toolName = "ucm_run"
-      , toolDescription = Just "Execute a Unison expression"
-      , toolInputSchema = object
-          [ "type" .= String "object"
-          , "properties" .= object
-              [ "expression" .= object
-                  [ "type" .= String "string"
-                  , "description" .= String "Unison expression to run"
-                  ]
-              ]
-          , "required" .= ["expression" :: Text]
-          ]
-      }
-  , Tool
-      { toolName = "ucm_list_projects"
-      , toolDescription = Just "List all projects in the codebase"
-      , toolInputSchema = object
-          [ "type" .= String "object"
-          , "properties" .= object []
-          ]
-      }
+  [ toolWithStringParam "ucm_find" 
+      "Search for definitions in the Unison codebase"
+      "query" "Search query (name or type)"
+  , toolWithStringParam "ucm_add"
+      "Add definitions to the codebase"
+      "code" "Unison code to add"
+  , toolWithStringParam "ucm_run"
+      "Execute a Unison expression"
+      "expression" "Unison expression to run"
+  , simpleTool "ucm_list_projects"
+      "List all projects in the codebase"
   , Tool
       { toolName = "ucm_switch_project"
       , toolDescription = Just "Switch to a different project"
@@ -83,14 +45,8 @@ availableTools =
           , "required" .= ["project" :: Text]
           ]
       }
-  , Tool
-      { toolName = "ucm_list_branches"
-      , toolDescription = Just "List branches in the current project"
-      , toolInputSchema = object
-          [ "type" .= String "object"
-          , "properties" .= object []
-          ]
-      }
+  , simpleTool "ucm_list_branches"
+      "List branches in the current project"
   , Tool
       { toolName = "ucm_switch_branch"
       , toolDescription = Just "Switch to a different branch"
@@ -133,27 +89,11 @@ availableTools =
           , "required" .= ["name" :: Text]
           ]
       }
-  , Tool
-      { toolName = "ucm_update"
-      , toolDescription = Just "Update existing definitions in the codebase"
-      , toolInputSchema = object
-          [ "type" .= String "object"
-          , "properties" .= object []
-          ]
-      }
-  , Tool
-      { toolName = "ucm_ls"
-      , toolDescription = Just "List contents of a namespace"
-      , toolInputSchema = object
-          [ "type" .= String "object"
-          , "properties" .= object
-              [ "namespace" .= object
-                  [ "type" .= String "string"
-                  , "description" .= String "Namespace to list (optional)"
-                  ]
-              ]
-          ]
-      }
+  , simpleTool "ucm_update"
+      "Update existing definitions in the codebase"
+  , toolWithOptionalStringParam "ucm_ls"
+      "List contents of a namespace"
+      "namespace" "Namespace to list (optional)"
   , Tool
       { toolName = "ucm_delete"
       , toolDescription = Just "Delete a definition from the codebase"
@@ -310,14 +250,6 @@ availableTools =
           ]
       }
   , Tool
-      { toolName = "ucm_projects"
-      , toolDescription = Just "List all projects (alias for ucm_list_projects)"
-      , toolInputSchema = object
-          [ "type" .= String "object"
-          , "properties" .= object []
-          ]
-      }
-  , Tool
       { toolName = "ucm_switch"
       , toolDescription = Just "Switch to a different project or branch"
       , toolInputSchema = object
@@ -361,37 +293,50 @@ availableTools =
 
 -- | Handle a tool call
 handleToolCall :: MonadIO m => UCMHandle -> ToolCall -> m ToolResult
-handleToolCall ucm toolCall = case toolCallName toolCall of
-  "ucm_find" -> handleFind ucm (toolCallArguments toolCall)
-  "ucm_add" -> handleAdd ucm (toolCallArguments toolCall)
-  "ucm_run" -> handleRun ucm (toolCallArguments toolCall)
-  "ucm_list_projects" -> handleListProjects ucm
-  "ucm_switch_project" -> handleSwitchProject ucm (toolCallArguments toolCall)
-  "ucm_list_branches" -> handleListBranches ucm
-  "ucm_switch_branch" -> handleSwitchBranch ucm (toolCallArguments toolCall)
-  "ucm_dependencies" -> handleDependencies ucm (toolCallArguments toolCall)
-  "ucm_view" -> handleView ucm (toolCallArguments toolCall)
-  "ucm_update" -> handleUpdate ucm
-  "ucm_ls" -> handleLs ucm (toolCallArguments toolCall)
-  "ucm_delete" -> handleDelete ucm (toolCallArguments toolCall)
-  "ucm_test" -> handleTest ucm (toolCallArguments toolCall)
-  "ucm_project_create" -> handleProjectCreate ucm (toolCallArguments toolCall)
-  "ucm_branch_create" -> handleBranchCreate ucm (toolCallArguments toolCall)
-  "ucm_merge" -> handleMerge ucm (toolCallArguments toolCall)
-  "ucm_lib_install" -> handleLibInstall ucm (toolCallArguments toolCall)
-  "ucm_share_search" -> handleShareSearch ucm (toolCallArguments toolCall)
-  "ucm_share_install" -> handleShareInstall ucm (toolCallArguments toolCall)
-  "ucm_command" -> handleCommand ucm (toolCallArguments toolCall)
-  "ucm_view_scratch" -> handleViewScratch
-  "ucm_load" -> handleLoad ucm (toolCallArguments toolCall)
-  "ucm_projects" -> handleListProjects ucm
-  "ucm_switch" -> handleSwitch ucm (toolCallArguments toolCall)
-  "ucm_history" -> handleHistory ucm (toolCallArguments toolCall)
-  "ucm_help" -> handleHelp ucm (toolCallArguments toolCall)
-  _ -> pure $ ToolResult
-    { toolResultContent = [textContent $ "Unknown tool: " <> toolCallName toolCall]
-    , toolResultIsError = Just True
-    }
+handleToolCall ucm toolCall = 
+  let args = toolCallArguments toolCall
+      handler = case toolCallName toolCall of
+        -- Core operations
+        "ucm_find" -> handleFind ucm args
+        "ucm_add" -> handleAdd ucm args
+        "ucm_run" -> handleRun ucm args
+        "ucm_view" -> handleView ucm args
+        "ucm_update" -> handleUpdate ucm
+        "ucm_delete" -> handleDelete ucm args
+        
+        -- Project and branch management
+        "ucm_list_projects" -> handleListProjects ucm
+        "ucm_switch_project" -> handleSwitchProject ucm args
+        "ucm_list_branches" -> handleListBranches ucm
+        "ucm_switch_branch" -> handleSwitchBranch ucm args
+        "ucm_project_create" -> handleProjectCreate ucm args
+        "ucm_branch_create" -> handleBranchCreate ucm args
+        "ucm_merge" -> handleMerge ucm args
+        
+        -- Navigation and inspection
+        "ucm_ls" -> handleLs ucm args
+        "ucm_dependencies" -> handleDependencies ucm args
+        "ucm_history" -> handleHistory ucm args
+        
+        -- Testing
+        "ucm_test" -> handleTest ucm args
+        
+        -- Library management
+        "ucm_lib_install" -> handleLibInstall ucm args
+        "ucm_share_search" -> handleShareSearch ucm args
+        "ucm_share_install" -> handleShareInstall ucm args
+        
+        -- Workflow tools
+        "ucm_view_scratch" -> handleViewScratch
+        "ucm_load" -> handleLoad ucm args
+        "ucm_switch" -> handleSwitch ucm args
+        "ucm_help" -> handleHelp ucm args
+        
+        -- Generic command
+        "ucm_command" -> handleCommand ucm args
+        
+        _ -> pure $ errorResult $ "Unknown tool: " <> toolCallName toolCall
+  in handler
 
 -- | Implementation of ucm_find
 handleFind :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
@@ -516,16 +461,7 @@ handleView ucm (Just params) = do
     _ -> pure $ errorResult "Invalid parameters"
 handleView _ Nothing = pure $ errorResult "Missing parameters"
 
--- | Helper to create error results
-errorResult :: Text -> ToolResult
-errorResult msg = ToolResult
-  { toolResultContent = [object ["type" .= String "text", "text" .= msg]]
-  , toolResultIsError = Just True
-  }
 
--- | Helper to create text content block
-textContent :: Text -> Value
-textContent text = object ["type" .= String "text", "text" .= text]
 
 -- | Implementation of ucm_update
 handleUpdate :: MonadIO m => UCMHandle -> m ToolResult
@@ -746,57 +682,33 @@ handleViewScratch = do
 -- | Implementation of ucm_load
 handleLoad :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
 handleLoad ucm params = do
-  let filename = case params of
-        Just (Object o) -> case lookup "file" (toList o) of
-          Just (String f) -> f
-          _ -> "scratch.u"
-        _ -> "scratch.u"
+  let filename = getOptionalStringParam "file" "scratch.u" params
   result <- liftIO $ UCM.sendCommand ucm ("load " <> filename)
-  pure $ ToolResult
-    { toolResultContent = [textContent result]
-    , toolResultIsError = Just False
-    }
+  pure $ textResult result
 
 -- | Implementation of ucm_switch
 handleSwitch :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
-handleSwitch ucm (Just params) = do
-  case params of
-    Object o -> case lookup "target" (toList o) of
-      Just (String target) -> do
-        result <- liftIO $ UCM.sendCommand ucm ("switch " <> target)
-        pure $ ToolResult
-          { toolResultContent = [textContent result]
-          , toolResultIsError = Just False
-          }
-      _ -> pure $ errorResult "Invalid target parameter"
-    _ -> pure $ errorResult "Invalid parameters"
-handleSwitch _ Nothing = pure $ errorResult "Missing parameters"
+handleSwitch ucm params = 
+  case getStringParam "target" params of
+    Just target -> do
+      result <- liftIO $ UCM.sendCommand ucm ("switch " <> target)
+      pure $ textResult result
+    Nothing -> pure $ errorResult "Missing or invalid target parameter"
 
 -- | Implementation of ucm_history
 handleHistory :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
 handleHistory ucm params = do
-  let limitText = case params of
-        Just (Object o) -> case lookup "limit" (toList o) of
-          Just (Number n) -> T.pack $ show (round n :: Int)
-          _ -> "10"
-        _ -> "10"
+  let limit = getOptionalNumberParam "limit" 10 params
+      limitText = T.pack $ show (round limit :: Int)
   result <- liftIO $ UCM.sendCommand ucm ("history " <> limitText)
-  pure $ ToolResult
-    { toolResultContent = [textContent result]
-    , toolResultIsError = Just False
-    }
+  pure $ textResult result
 
 -- | Implementation of ucm_help
 handleHelp :: MonadIO m => UCMHandle -> Maybe Value -> m ToolResult
 handleHelp ucm params = do
-  let cmd = case params of
-        Just (Object o) -> case lookup "command" (toList o) of
-          Just (String c) -> "help " <> c
-          _ -> "help"
-        _ -> "help"
+  let cmd = case getStringParam "command" params of
+        Just c -> "help " <> c
+        Nothing -> "help"
   result <- liftIO $ UCM.sendCommand ucm cmd
-  pure $ ToolResult
-    { toolResultContent = [textContent result]
-    , toolResultIsError = Just False
-    }
+  pure $ textResult result
 

@@ -26,6 +26,7 @@ library
   exposed-modules:
       Unison.MCP.Protocol
       Unison.MCP.Server
+      Unison.MCP.ToolHelpers
       Unison.MCP.Tools
       Unison.MCP.UCM
   other-modules:

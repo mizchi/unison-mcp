@@ -32,7 +32,7 @@ main = hspec $ do
   
   describe "Tools" $ do
     it "provides the correct number of tools" $ do
-      length availableTools `shouldBe` 9
+      length availableTools `shouldBe` 25
     
     it "all tools have valid schemas" $ do
       mapM_ checkToolSchema availableTools
