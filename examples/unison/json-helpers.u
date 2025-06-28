@@ -1,0 +1,223 @@
+-- JSON Helper Functions for cleaner JSON manipulation
+
+-- ========================================
+-- JSON Builder DSL
+-- ========================================
+
+-- Type alias for cleaner signatures
+type JsonBuilder = [(Text, Json)]
+
+-- Create empty JSON object
+json.empty : Json
+json.empty = Json.Object []
+
+-- Add field to JSON object
+(|>) : Json -> (Text, Json) -> Json
+json |> (key, value) = match json with
+  Json.Object fields -> Json.Object (fields ++ [(key, value)])
+  _ -> json
+
+-- Bulk add fields
+(|>>) : Json -> JsonBuilder -> Json
+json |>> fields = match json with
+  Json.Object existing -> Json.Object (existing ++ fields)
+  _ -> json
+
+-- Create JSON object from builder
+json.object : JsonBuilder -> Json
+json.object = Json.Object
+
+-- ========================================
+-- Field Accessors with Operators
+-- ========================================
+
+-- Safe field access
+(.?) : Json -> Text -> Optional Json
+json .? key = mcp.getField key json
+
+-- Required field access (with default)
+(.!) : Json -> Text -> Json -> Json
+json .! key = default -> match json .? key with
+  Some value -> value
+  None -> default
+
+-- Chained field access
+(..?) : Json -> [Text] -> Optional Json
+json ..? [] = Some json
+json ..? (key +: keys) = match json .? key with
+  Some nextJson -> nextJson ..? keys
+  None -> None
+
+-- ========================================
+-- JSON Pattern Matching Helpers
+-- ========================================
+
+-- Extract and transform in one step
+json.extract : Json -> Text -> (Json -> Optional a) -> Optional a
+json.extract obj key transform = 
+  match obj .? key with
+    Some value -> transform value
+    None -> None
+
+-- Extract multiple fields at once
+json.extractFields : Json -> [(Text, Json -> Optional a)] -> Optional [a]
+json.extractFields obj extractors =
+  let
+    results = List.map (pair -> 
+      match pair with (key, extractor) ->
+        json.extract obj key extractor
+    ) extractors
+    if List.all Optional.isSome results
+      then Some (List.filterMap id results)
+      else None
+
+-- ========================================
+-- JSON Transformation
+-- ========================================
+
+-- Map over JSON array
+json.mapArray : (Json -> Json) -> Json -> Json
+json.mapArray f json = match json with
+  Json.Array items -> Json.Array (List.map f items)
+  _ -> json
+
+-- Filter JSON array
+json.filterArray : (Json -> Boolean) -> Json -> Json
+json.filterArray pred json = match json with
+  Json.Array items -> Json.Array (List.filter pred items)
+  _ -> json
+
+-- Transform object fields
+json.mapObject : ((Text, Json) -> (Text, Json)) -> Json -> Json
+json.mapObject f json = match json with
+  Json.Object fields -> Json.Object (List.map f fields)
+  _ -> json
+
+-- ========================================
+-- Validation Helpers
+-- ========================================
+
+type JsonSchema = {
+  required: [Text],
+  optional: [Text],
+  validators: [(Text, Json -> Boolean)]
+}
+
+json.validate : JsonSchema -> Json -> Either Text Json
+json.validate schema json =
+  match json with
+    Json.Object _ ->
+      let
+        checkRequired = List.all (field -> 
+          Optional.isSome (json .? field)
+        ) schema.required
+        
+        checkValidators = List.all (pair ->
+          match pair with (field, validator) ->
+            match json .? field with
+              Some value -> validator value
+              None -> List.member field schema.optional
+        ) schema.validators
+        
+      if checkRequired && checkValidators
+        then Right json
+        else Left "Validation failed"
+    _ -> Left "Expected JSON object"
+
+-- ========================================
+-- Pretty Examples
+-- ========================================
+
+-- Example 1: Building JSON with operator
+buildRequest : Text -> Float -> Json
+buildRequest method id =
+  json.empty
+    |> ("jsonrpc", Json.Text "2.0")
+    |> ("id", Json.Number (Float.toText id))
+    |> ("method", Json.Text method)
+
+-- Example 2: Building with bulk operator
+buildComplexRequest : Text -> Float -> [(Text, Json)] -> Json
+buildComplexRequest method id params =
+  json.empty |>> [
+    ("jsonrpc", Json.Text "2.0"),
+    ("id", Json.Number (Float.toText id)),
+    ("method", Json.Text method),
+    ("params", json.object params)
+  ]
+
+-- Example 3: Safe navigation
+getUserEmail : Json -> Optional Text
+getUserEmail response = 
+  response ..? ["result", "user", "email"] >>= mcp.getTextField ""
+
+-- Example 4: Pattern matching with extraction
+parseToolCall : Json -> Either Text (Text, Json)
+parseToolCall request =
+  match json.extractFields request [
+    ("name", mcp.getTextField ""),
+    ("arguments", Some)
+  ] with
+    Some [name, args] -> Right (name, args)
+    _ -> Left "Invalid tool call format"
+
+-- ========================================
+-- Usage in MCP context
+-- ========================================
+
+-- Cleaner client request building
+mcp.client.buildRequest : Text -> Float -> Text -> Optional Json -> Json
+mcp.client.buildRequest jsonrpc id method params =
+  let
+    base = json.object [
+      ("jsonrpc", Json.Text jsonrpc),
+      ("id", Json.Number (Float.toText id)),
+      ("method", Json.Text method)
+    ]
+  match params with
+    Some p -> base |> ("params", p)
+    None -> base
+
+-- Cleaner response parsing
+mcp.client.parseResponseClean : Json -> Either mcp.Error Json
+mcp.client.parseResponseClean response =
+  match response .? "error" with
+    Some errorJson ->
+      match json.extractFields errorJson [
+        ("code", mcp.getNumberField ""),
+        ("message", mcp.getTextField "")
+      ] with
+        Some [code, message] ->
+          Left (mcp.Error.Error code message (errorJson .? "data"))
+        _ -> Left (mcp.Error.Error mcp.errors.parseError "Invalid error" None)
+    None ->
+      match response .? "result" with
+        Some result -> Right result
+        None -> Left (mcp.Error.Error mcp.errors.parseError "No result" None)
+
+-- Tool parsing with cleaner syntax
+mcp.client.parseToolsClean : Json -> [mcp.Tool]
+mcp.client.parseToolsClean result =
+  match result .? "tools" with
+    Some toolsJson -> 
+      toolsJson 
+        |> json.filterArray (tool -> Optional.isSome (tool .? "name"))
+        |> json.mapArray parseTool
+        |> extractTools
+    _ -> []
+  where
+    parseTool : Json -> Optional mcp.Tool
+    parseTool tool = 
+      match tool .? "name" with
+        Some (Json.Text name) ->
+          Some (mcp.Tool.Tool 
+            name 
+            (tool .? "description" >>= mcp.getTextField "")
+            (tool .! "inputSchema" $ json.empty)
+          )
+        _ -> None
+    
+    extractTools : Json -> [mcp.Tool]
+    extractTools json = match json with
+      Json.Array tools -> List.filterMap id tools
+      _ -> []

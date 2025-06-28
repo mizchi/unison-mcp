@@ -1,0 +1,49 @@
+-- Test MCP Implementation
+
+-- Test initialize response
+testInit : Json
+testInit = 
+  let
+    request = Json.Object [
+      ("jsonrpc", Json.Text "2.0"),
+      ("id", Json.Number "1"),
+      ("method", Json.Text "initialize"),
+      ("params", Json.Object [
+        ("protocolVersion", Json.Text "2024-11-05")
+      ])
+    ]
+    handleRequest request
+
+> testInit
+
+-- Test tools/list response
+testTools : Json
+testTools =
+  let
+    request = Json.Object [
+      ("jsonrpc", Json.Text "2.0"),
+      ("id", Json.Number "2"),
+      ("method", Json.Text "tools/list")
+    ]
+    handleRequest request
+
+> testTools
+
+-- Test tools/call with ucm_find
+testFindCall : Json
+testFindCall =
+  let
+    request = Json.Object [
+      ("jsonrpc", Json.Text "2.0"),
+      ("id", Json.Number "3"),
+      ("method", Json.Text "tools/call"),
+      ("params", Json.Object [
+        ("name", Json.Text "ucm_find"),
+        ("arguments", Json.Object [
+          ("query", Json.Text "List")
+        ])
+      ])
+    ]
+    handleRequest request
+
+> testFindCall

@@ -1,0 +1,17 @@
+-- Simple Web Server Example
+use lib.unison_http_4_1_5
+
+webMain : '{IO, Exception} ()
+webMain = do
+  port = 8080
+  printLine ("Starting server on port " ++ Nat.toText port)
+  
+  handler : HttpRequest ->{IO, Exception} HttpResponse
+  handler req = 
+    match req.url with
+      "/" -> HttpResponse.ok (Body.text "Welcome to Unison Web!")
+      "/api/hello" -> 
+        HttpResponse.ok (Body.json "{\"message\": \"Hello from Unison\"}")
+      _ -> HttpResponse.notFound (Body.text "Page not found")
+  
+  Http.server port handler

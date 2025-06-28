@@ -1,0 +1,13 @@
+-- Simple Hello World program with arguments
+-- Requires base library: lib.install @unison/base/releases/3.21.0
+
+use base
+
+hello : Text -> Text
+hello name = "Hello, " ++ name ++ "!"
+
+main : '{IO, Exception} ()
+main = do
+  args = io.cli.getArgs ()
+  name = data.List.head args |> data.Optional.getOrElse "World"
+  io.printLine (hello name)

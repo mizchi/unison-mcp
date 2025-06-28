@@ -1,0 +1,38 @@
+-- Copy all MCP definitions from unison-mcp-unison project
+-- This file should be loaded in the mcp/main project
+
+-- Import from the source project
+use .unison-mcp-unison.main.mcp
+
+-- Re-export all definitions
+mcp.Request = .unison-mcp-unison.main.mcp.Request
+mcp.Response = .unison-mcp-unison.main.mcp.Response
+mcp.Error = .unison-mcp-unison.main.mcp.Error
+mcp.Tool = .unison-mcp-unison.main.mcp.Tool
+mcp.ServerConfig = .unison-mcp-unison.main.mcp.ServerConfig
+
+mcp.response = .unison-mcp-unison.main.mcp.response
+mcp.errorResponse = .unison-mcp-unison.main.mcp.errorResponse
+
+mcp.errors.parseError = .unison-mcp-unison.main.mcp.errors.parseError
+mcp.errors.invalidRequest = .unison-mcp-unison.main.mcp.errors.invalidRequest
+mcp.errors.methodNotFound = .unison-mcp-unison.main.mcp.errors.methodNotFound
+mcp.errors.invalidParams = .unison-mcp-unison.main.mcp.errors.invalidParams
+mcp.errors.internalError = .unison-mcp-unison.main.mcp.errors.internalError
+
+mcp.getField = .unison-mcp-unison.main.mcp.getField
+mcp.getTextField = .unison-mcp-unison.main.mcp.getTextField
+mcp.getNumberField = .unison-mcp-unison.main.mcp.getNumberField
+
+mcp.serverInfo = .unison-mcp-unison.main.mcp.serverInfo
+mcp.capabilities = .unison-mcp-unison.main.mcp.capabilities
+mcp.handleInitialize = .unison-mcp-unison.main.mcp.handleInitialize
+mcp.handleToolsList = .unison-mcp-unison.main.mcp.handleToolsList
+
+mcp.request = .unison-mcp-unison.main.mcp.request
+mcp.initializeRequest = .unison-mcp-unison.main.mcp.initializeRequest
+mcp.toolsListRequest = .unison-mcp-unison.main.mcp.toolsListRequest
+mcp.toolsCallRequest = .unison-mcp-unison.main.mcp.toolsCallRequest
+
+mcp.README = .unison-mcp-unison.main.mcp.README
+mcp.ReleaseNotes = .unison-mcp-unison.main.mcp.ReleaseNotes
